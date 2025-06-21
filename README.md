@@ -169,18 +169,18 @@ graph TD;
 > Todas las operaciones son `async` y algunas consultas se ejecutan en paralelo
 > para aprovechar al máximo los recursos de la aplicación.
 
-```markmap
-# Principios
-## Capas
-### API / gRPC
-### Dominio
-### Infraestructura
-## Patrones
-### DI
-### Repository
-### Adapter
-### Factory
-### Caching
+```mermaid
+graph TD;
+    A[Principios] --> B[Capas];
+    B --> B1[API / gRPC];
+    B --> B2[Dominio];
+    B --> B3[Infraestructura];
+    A --> C[Patrones];
+    C --> C1[DI];
+    C --> C2[Repository];
+    C --> C3[Adapter];
+    C --> C4[Factory];
+    C --> C5[Caching];
 ```
 
 #### Flujo de datos
@@ -291,3 +291,14 @@ solución de consulta de RUC que expone esta API.
 ## ⚠️ Advertencia
 El portal de SUNAT puede cambiar o tener restricciones de acceso. Este código se comparte con fines educativos y debe usarse respetando los términos de SUNAT.
 
+
+## 🔘 Solución a error "Captcha request failed: 401 Unauthorized"
+Si al realizar una consulta la API muestra `Captcha request failed: 401 Unauthorized`, revisa lo siguiente:
+
+1. Usa la última versión del proyecto. La clase `CaptchaSolver` simula un navegador real estableciendo `User-Agent`, `Referer`, `Accept` y `Accept-Language`. También incluye el valor aleatorio `nmagic`/`numRnd` que SUNAT valida para permitir la descarga.
+2. Previamente se debe cargar la página `FrameCriterioBusquedaWeb.jsp` para obtener las cookies de sesión. El método `SunatClient.SendRawAsync` ya realiza esta petición antes de solicitar el captcha.
+3. Verifica que tu conexión permita acceder a `e-consultaruc.sunat.gob.pe`; un cortafuego o proxy podría bloquear la descarga del captcha o descartar las cookies.
+4. Asegúrate de tener instalado Tesseract OCR para que el captcha se resuelva automáticamente. Si Tesseract no está disponible se solicitará ingresarlo manualmente.
+5. A partir de la versión actual la clase `CaptchaSolver` detecta los códigos `401 Unauthorized` y `404 Not Found` devolviendo un captcha vacío cuando SUNAT lo omite, evitando que se genere una excepción.
+
+Tras comprobar estos puntos la API debería responder correctamente a las consultas `/ruc/{ruc}`.
